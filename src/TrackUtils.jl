@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-distcols = [:centroid_x,:centroid_y]
 
 function safe_extrema(arr)
     foldl(arr, init=(10000, 0)) do (xmin, xmax), x
@@ -57,12 +55,13 @@ function track_blobs(positions, blocking::Float64=10000.0; maxdist::Float64=20.0
     return inds
 end
 
+distcols = [:centroid_x,:centroid_y]
 
-function track(data_vec, fov_id, range, label_mapping = Dict(), start_id = 0,maxdist=20.0)
+function track(objects, fov_id, range, label_mapping = Dict(), start_id = 0,maxdist=5.0)
     trackdf = DataFrame()
-    tracks = track_blobs([Matrix(props[:,distcols])' for props in data_vec[range]],maxdist=maxdist)
-    curr_t(t) = range[t]#+first(range)-1
-    get_label(t,c) = data_vec[curr_t(t)].label_id[c]
+    tracks = track_blobs([Matrix(props[:,distcols])' for props in objects[range]],maxdist=maxdist)
+    curr_t(t) = range[t]
+    get_label(t,c) = objects[curr_t(t)].label_id[c]
 
     for arr in tracks
         t, c = arr[1]
@@ -86,6 +85,21 @@ function track(data_vec, fov_id, range, label_mapping = Dict(), start_id = 0,max
     trackdf
 end
 
+function update_tracks!(tracks, objects::Vector{Objects}, index::Int64;maxdist=20.0, kwargs...)
+    fov_objects = objects[index].data
+    label_mapping, start_id = get_labelmap(tracks,fov_objects,index)
+    
+    new_tracks = track(fov_objects, index, length(fov_objects) .+ (-1:0), label_mapping, start_id,maxdist)
+    append!(tracks, new_tracks)
+end
+
+function get_labelmap(tracks::DataFrame, objects, fov_id::Int64)
+    start_id = isempty(tracks) ? 0 : maximum(tracks.track_id)
+    tracks_filt = filter([:t, :fov_id] => (x,v) -> (x == length(objects)-1) && (v == fov_id), tracks)
+    
+    Dict(zip(tracks_filt.label_id, tracks_filt.track_id)), start_id
+end
+
 function get_latest_props(fov_arr::Vector{FOV}, n)
     props = DataFrame()
     
@@ -100,39 +114,4 @@ function get_latest_props(fov_arr::Vector{FOV}, n)
     return props
 end
 
-index = [:fov_id, :track_id]
-function calculate_speed_stats(df)
-    
-    diff_df = combine(groupby(df, index)) do gdf
-        DataFrame(
-            Any[
-                gdf.t[2:end],
-                gdf.label_id[2:end],
-                (diff(df[!,c]) for c in distcols)...
-                ],
-            [
-                :t,
-                :label_id,
-                (Symbol("diff_" * string(d)) for d in distcols)...
-                ]
-            )
-    end
-    
-    speed_df = select(
-        diff_df,
-        [:diff_centroid, :diff_centroid_y] => ((x,y) -> hypot.(x,y)) => :speed, [index..., :t, :label_id]
-    )
-    object_index = vcat(index, :t)
-    df = innerjoin(speed_df, df[:, [:centroid_x, :centroid_y, object_index...]], on = object_index)
-    stats_df = combine(groupby(df, [:fov_id, :track_id]),
-        :speed => mean,
-        :centroid_x => last => :centroid_x,
-        :centroid_y => last => :centroid_y,
-        :t => last => :t)
-end
 
-vecbin(hist) = x -> StatsBase.binindex(hist, x)
-function discretize(arr, n)
-    hist = fit(Histogram, arr, quantile(arr, Linrange(0.0,1.0, n+1)[1:n]))
-    vecbin(hist).(arr)
-end
