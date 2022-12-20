@@ -1,0 +1,4 @@
+[deps]
+CombinedParsers = "5ae71ed2-6f8a-4ed1-b94f-e14e8158f19e"
+DDMInfection = "001fe6f6-f21e-4aa3-aea2-4d664667a815"
+Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
