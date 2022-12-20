@@ -3,6 +3,7 @@
 Settings (e.g. capture definitions, autofocus settings, storage locations, and run variables) for the acquisition are defined at the start of the program. The program performs the following for a well; the data-independent acquisition performs a timelapse and generates points covering approximately 85% of the wells. Autofocus and perfect-focus is performed for the first point in the first timepoint to keep focus throughout the DIA. Images are captured for each point and saved to the defined storage location. A macro initiates the command-line interface (CLI) that posts the image to the server. Subsequently, a request is made on the server for associated objects in order to receive the stage coordinates of the associated objects as soon as they are found. If the response contains a "1", the time-lapse loop is exited and the data-dependent acquisition process is initiated. The objective is switched to the 60X water immersion objective, and water is applied to the objective through an automated water dispenser. Autofocus is performed on each coordinate and saved. Lastly, images are taken for each coordinate in higher magnification for the duration of the timelapse. 
 
 ```@raw html
+<!DOCTYPE html>
 <html>
 <head>
 <meta charset="UTF-8">
@@ -560,3 +561,4 @@ e">
 </div>
 </body>
 </html>
+```
