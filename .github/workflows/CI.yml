@@ -44,10 +44,14 @@ jobs:
       - uses: actions/checkout@v2
       - uses: julia-actions/setup-julia@v1
         with:
-          version: '1.8'
+          version: '1.7'
       - uses: julia-actions/julia-buildpkg@v1
+      - uses: julia-actions/add-julia-registry@v1
+        with:
+          key: ${{ secrets.DOCUMENTER_KEY }}
+          registry: nordenfeltLab/NordenfeltLabRegistry
       - run: |
-          julia --color=yes --code-coverage --project=docs/ -e 'using Pkg;Pkg.add(PackageSpec(name="CombinedParsers", rev="master"; Pkg.add(url="https://github.com/ahnlabb/DDMFramework.jl.git"); Pkg.develop(PackageSpec(path=pwd())); Pkg.instantiate()'
+          julia --color=yes --code-coverage --project=docs/ -e 'using Pkg; Pkg.add(url="https://github.com/ahnlabb/DDMFramework.jl.git"); Pkg.develop(PackageSpec(path=pwd())); Pkg.instantiate()'
       - uses: julia-actions/julia-docdeploy@v1
         with:
           install-package: false
