@@ -54,7 +54,7 @@ jobs:
           julia --color=yes --project=docs -e '
             using Pkg
             Pkg.develop(PackageSpec(path=pwd()))
-            Pkg.add("CombinedParsers", rev="master")
+            Pkg.add(PackageSpec(name="CombinedParsers", rev="master"))
             Pkg.instantiate()
             '
 
