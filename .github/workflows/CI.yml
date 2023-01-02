@@ -50,16 +50,24 @@ jobs:
           key: ${{ secrets.DOCUMENTER_KEY }}
           registry: nordenfeltLab/NordenfeltLabRegistry
       - uses: julia-actions/julia-buildpkg@v1
-      - run: |
-          julia --color=yes --code-coverage --project=docs/ -e 'using Pkg; Pkg.add(url="https://github.com/ahnlabb/DDMFramework.jl.git"); Pkg.develop(PackageSpec(path=pwd())); Pkg.instantiate()'
       - uses: julia-actions/julia-docdeploy@v1
         with:
           install-package: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           DOCUMENTER_KEY: ${{ secrets.DOCUMENTER_KEY }}
-      - run: |
-          julia --project=docs -e '
+      - name: Instantiate pkg
+        run: |
+          julia --color=yes --project=docs -e '
+            using Pkg
+            Pkg.develop(PackageSpec(path=pwd()))
+            Pkg.instantiate()
+            '
+      - name: Build documentation
+        run: |
+          julia --color=yes --project=docs -e '
+            using Pkg
+            Pkg.instantiate()
             using Documenter: DocMeta, doctest
             using DDMInfection
             DocMeta.setdocmeta!(DDMInfection, :DocTestSetup, :(using DDMInfection); recursive=true)
